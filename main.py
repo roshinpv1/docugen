@@ -59,6 +59,8 @@ def main():
     parser.add_argument("--no-cache", action="store_true", help="Disable LLM response caching (default: caching enabled)")
     # Add max_abstraction_num parameter to control the number of abstractions
     parser.add_argument("--max-abstractions", type=int, default=10, help="Maximum number of technical components to identify (default: 10)")
+    # Add timeout parameter for LLM calls
+    parser.add_argument("--timeout", type=int, default=600, help="LLM timeout in seconds (default: 600, 10 minutes)")
 
     args = parser.parse_args()
 
@@ -94,6 +96,9 @@ def main():
         
         # Add max_abstraction_num parameter
         "max_abstraction_num": args.max_abstractions,
+
+        # Add timeout parameter for LLM calls
+        "timeout": args.timeout,
 
         # Outputs will be populated by the nodes
         "files": [],

@@ -115,6 +115,7 @@ class IdentifyAbstractions(Node):
             language,
             use_cache,
             max_abstraction_num,
+            shared.get("timeout", 600),  # Add timeout from shared state
         )  # Return all parameters
 
     def exec(self, prep_res):
@@ -126,6 +127,7 @@ class IdentifyAbstractions(Node):
             language,
             use_cache,
             max_abstraction_num,
+            timeout,
         ) = prep_res  # Unpack all parameters
         print(f"Identifying abstractions using LLM...")
 
@@ -189,7 +191,7 @@ Format the output as a YAML list of dictionaries:
     - 5 # api/products.py
 # ... up to {max_abstraction_num} technical components
 ```"""
-        response = call_llm(prompt)  # Use cache only if enabled and not retrying
+        response = call_llm(prompt, timeout=timeout)  # Use cache only if enabled and not retrying
 
         # --- Validation ---
         yaml_str = response.strip().split("```yaml")[1].split("```")[0].strip()
@@ -300,6 +302,7 @@ class AnalyzeRelationships(Node):
             project_name,
             language,
             use_cache,
+            shared.get("timeout", 600),  # Add timeout from shared state
         )  # Return use_cache
 
     def exec(self, prep_res):
@@ -310,6 +313,7 @@ class AnalyzeRelationships(Node):
             project_name,
             language,
             use_cache,
+            timeout,
          ) = prep_res  # Unpack use_cache
         print(f"Analyzing relationships using LLM...")
 
@@ -376,7 +380,7 @@ relationships:
 
 Now, provide the YAML output:
 """
-        response = call_llm(prompt) # Use cache only if enabled and not retrying
+        response = call_llm(prompt, timeout=timeout) # Use cache only if enabled and not retrying
 
         # --- Validation ---
         yaml_str = response.strip().split("```yaml")[1].split("```")[0].strip()
@@ -494,6 +498,7 @@ class OrderChapters(Node):
             project_name,
             list_lang_note,
             use_cache,
+            shared.get("timeout", 600),  # Add timeout from shared state
         )  # Return use_cache
 
     def exec(self, prep_res):
@@ -504,6 +509,7 @@ class OrderChapters(Node):
             project_name,
             list_lang_note,
             use_cache,
+            timeout,
         ) = prep_res  # Unpack use_cache
         print("Determining chapter order using LLM...")
         # No language variation needed here in prompt instructions, just ordering based on structure
@@ -531,7 +537,7 @@ Output the ordered list of abstraction indices, including the name in a comment 
 
 Now, provide the YAML output:
 """
-        response = call_llm(prompt) # Use cache only if enabled and not retrying
+        response = call_llm(prompt, timeout=timeout) # Use cache only if enabled and not retrying
 
         # --- Validation ---
         yaml_str = response.strip().split("```yaml")[1].split("```")[0].strip()
@@ -674,6 +680,7 @@ class WriteChapters(BatchNode):
                         "next_chapter": next_chapter,  # Add next chapter info (uses potentially translated name)
                         "language": language,  # Add language for multi-language support
                         "use_cache": use_cache, # Pass use_cache flag
+                        "timeout": shared.get("timeout", 600),  # Add timeout from shared state
                         # previous_chapters_summary will be added dynamically in exec
                     }
                 )
@@ -697,6 +704,7 @@ class WriteChapters(BatchNode):
         project_name = item.get("project_name")
         language = item.get("language", "english")
         use_cache = item.get("use_cache", True) # Read use_cache from item
+        timeout = item.get("timeout", 600) # Read timeout from item
         print(f"Writing chapter {chapter_num} for: {abstraction_name} using LLM...")
 
         # Prepare file context string from the map
@@ -825,7 +833,7 @@ Instructions for the technical documentation chapter (Generate content in {langu
 
 Now, directly provide a comprehensive technical documentation output (DON'T need ```markdown``` tags):
 """
-        chapter_content = call_llm(prompt) # Use cache only if enabled and not retrying
+        chapter_content = call_llm(prompt, timeout=timeout) # Use cache only if enabled and not retrying
         # Basic validation/cleanup
         actual_heading = f"# Chapter {chapter_num}: {abstraction_name}"  # Use potentially translated name
         if not chapter_content.strip().startswith(f"# Chapter {chapter_num}"):

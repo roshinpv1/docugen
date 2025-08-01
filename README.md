@@ -152,6 +152,12 @@ This is a tutorial project of [Pocket Flow](https://github.com/The-Pocket/Pocket
     
     # Or, generate HTML documentation in Chinese
     python main.py --repo https://github.com/username/repo --format html --language Chinese
+    
+    # Or, set a custom timeout for LLM calls (15 minutes)
+    python main.py --repo https://github.com/username/repo --timeout 900
+    
+    # Or, use environment variable for timeout
+    OPENAI_TIMEOUT=1200 python main.py --repo https://github.com/username/repo
     ```
 
     - `--repo` or `--dir` - Specify either a GitHub repo URL or a local directory path (required, mutually exclusive)
@@ -165,6 +171,7 @@ This is a tutorial project of [Pocket Flow](https://github.com/The-Pocket/Pocket
     - `--language` - Language for the generated documentation (default: "english")
     - `--format` - Output format for documentation: "markdown" or "html" (default: "markdown")
     - `--max-abstractions` - Maximum number of technical components to identify (default: 10)
+    - `--timeout` - LLM timeout in seconds (default: 600, 10 minutes)
     - `--no-cache` - Disable LLM response caching (default: caching enabled)
 
 The application will crawl the repository, analyze the codebase architecture, identify technical components, generate comprehensive technical documentation in the specified language, and save the output in the specified directory (default: ./output).

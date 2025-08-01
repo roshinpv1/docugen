@@ -67,7 +67,7 @@ class LLMConfig:
     base_url: Optional[str] = None
     temperature: float = 0.1
     max_tokens: int = 4000
-    timeout: int = 300
+    timeout: int = 600  # Increased from 300 to 600 seconds (10 minutes)
 
 
 @dataclass
@@ -546,7 +546,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("OPENAI_API_KEY"),
             base_url=os.getenv("OPENAI_BASE_URL"),
             temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("OPENAI_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.ANTHROPIC:
@@ -556,7 +557,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("ANTHROPIC_API_KEY"),
             base_url=os.getenv("ANTHROPIC_BASE_URL"),
             temperature=float(os.getenv("ANTHROPIC_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("ANTHROPIC_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.GEMINI:
@@ -566,7 +568,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("GEMINI_API_KEY"),
             base_url=os.getenv("GEMINI_BASE_URL"),
             temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("GEMINI_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("GEMINI_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("GEMINI_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.LOCAL:
@@ -576,7 +579,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("LOCAL_LLM_API_KEY", "not-needed"),
             base_url=os.getenv("LOCAL_LLM_URL", "http://localhost:11434/v1"),
             temperature=float(os.getenv("LOCAL_LLM_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("LOCAL_LLM_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("LOCAL_LLM_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("LOCAL_LLM_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.OLLAMA:
@@ -586,7 +590,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=None,
             base_url=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
             temperature=float(os.getenv("OLLAMA_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("OLLAMA_NUM_PREDICT", "4000"))
+            max_tokens=int(os.getenv("OLLAMA_NUM_PREDICT", "4000")),
+            timeout=int(os.getenv("OLLAMA_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.ENTERPRISE:
@@ -596,7 +601,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("ENTERPRISE_LLM_API_KEY"),
             base_url=os.getenv("ENTERPRISE_LLM_URL"),
             temperature=float(os.getenv("ENTERPRISE_LLM_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("ENTERPRISE_LLM_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("ENTERPRISE_LLM_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("ENTERPRISE_LLM_TIMEOUT", "600"))
         )
     
     elif provider == LLMProvider.APIGEE:
@@ -606,7 +612,8 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
             api_key=os.getenv("APIGEE_CONSUMER_KEY"),
             base_url=os.getenv("ENTERPRISE_BASE_URL"),
             temperature=float(os.getenv("APIGEE_TEMPERATURE", "0.1")),
-            max_tokens=int(os.getenv("APIGEE_MAX_TOKENS", "4000"))
+            max_tokens=int(os.getenv("APIGEE_MAX_TOKENS", "4000")),
+            timeout=int(os.getenv("APIGEE_TIMEOUT", "600"))
         )
     
     else:
@@ -617,10 +624,15 @@ def _create_config_for_provider(provider: LLMProvider) -> LLMConfig:
 _llm_client = None
 
 
-def call_llm(prompt: str, use_cache: bool = True) -> str:
+def call_llm(prompt: str, use_cache: bool = True, timeout: Optional[int] = None) -> str:
     """
     Main function to call LLM - maintains backward compatibility
     This function automatically selects the best available LLM provider from environment variables
+    
+    Args:
+        prompt: The prompt to send to the LLM
+        use_cache: Ignored for backward compatibility
+        timeout: Optional timeout in seconds (overrides default)
     """
     global _llm_client
     
@@ -629,6 +641,10 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
         _llm_client = create_llm_client_from_env()
         if _llm_client is None:
             raise ValueError("No LLM provider configured. Please set appropriate environment variables.")
+    
+    # Update timeout if provided
+    if timeout is not None:
+        _llm_client.config.timeout = timeout
     
     # For now, we'll ignore the use_cache parameter as the new client doesn't support it
     # In a future version, we could add caching back if needed
